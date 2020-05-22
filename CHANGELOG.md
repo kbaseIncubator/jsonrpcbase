@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed CircleCI workflow by [@jayrbolton](https://github.com/jayrbolton)
 - Convert changelog.rst to CHANGELOG.md using keepachangelog.com format by [@jayrbolton](https://github.com/jayrbolton)
 - Convert and update readme.rst to README.md by [@jayrbolton](https://github.com/jayrbolton)
+- Migrated from nose to pytest by [@jayrbolton](https://github.com/jayrbolton)
+- Removed dependency on six and python ^2.7 type support by [@jayrbolton](https://github.com/jayrbolton)
 
 ## [0.1.2] - 2012-03-08
 ### Fixed
