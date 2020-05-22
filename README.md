@@ -2,6 +2,10 @@
 
 > NOTE: This is a fork of [level12/jsonrpcbase](https://github.com/level12/jsonrpcbase/) with changes maintained by KBase
 
+Build status (master):
+[![Build Status](https://travis-ci.org/kbase/relation_engine_importers.svg?branch=master)](https://travis-ci.org/kbase/relation_engine_importers)
+[![Coverage Status](https://coveralls.io/repos/github/kbase/relation_engine_importers/badge.svg)](https://coveralls.io/github/kbase/relation_engine_importers)
+
 Simple JSON-RPC service without transport layer
 
 This library is intended as an auxiliary library for easy an implementation of JSON-RPC services with Unix/TCP socket

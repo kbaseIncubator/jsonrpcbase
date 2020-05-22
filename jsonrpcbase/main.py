@@ -55,8 +55,6 @@ import json
 import logging
 import types
 
-import six
-
 DEFAULT_JSONRPC = '2.0'
 
 log = logging.getLogger(__name__)
@@ -289,8 +287,8 @@ class JSONRPCService(object):
         InvalidRequestError will be raised if the id value has invalid type.
         """
         if 'id' in rdata:
-            if isinstance(rdata['id'], six.string_types) or \
-                    isinstance(rdata['id'], six.integer_types) or \
+            if isinstance(rdata['id'], str) or \
+                    isinstance(rdata['id'], int) or \
                     isinstance(rdata['id'], float) or \
                     rdata['id'] is None:
                 return rdata['id']
@@ -309,7 +307,7 @@ class JSONRPCService(object):
         MethodNotFoundError will be raised if a method with given method name does not exist.
         """
         if 'method' in rdata:
-            if not isinstance(rdata['method'], six.string_types):
+            if not isinstance(rdata['method'], str):
                 raise InvalidRequestError
         else:
             raise InvalidRequestError
