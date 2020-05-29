@@ -179,7 +179,7 @@ def test_invalid_request_type():
     assert result['id'] is None
 
 
-def test_invalid_method_typeh():
+def test_invalid_method_type():
     """
     Test the error response for a request with an invalid method field type
     """
