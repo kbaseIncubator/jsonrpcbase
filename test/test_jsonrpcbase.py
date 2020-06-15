@@ -601,8 +601,6 @@ def test_service_discovery_ok():
     assert res['result']['service_info'] == info
 
 
-# TODO invalid service discovery params
-
 def test_service_discovery_invalid_params():
     """
     Test valid service discovery response.
@@ -616,6 +614,10 @@ def test_service_discovery_invalid_params():
     assert res['jsonrpc'] == '2.0'
     assert res['id'] == 0
     assert 'result' not in res
+    print(res)
+    assert res['error']['message'] == 'Invalid params'
+    assert res['error']['code'] == -32602
+    assert res['error']['data']['details'] == 'Parameters not allowed'
 
 
 def test_service_info():
