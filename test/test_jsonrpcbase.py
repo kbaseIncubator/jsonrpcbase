@@ -260,7 +260,6 @@ def test_server_error():
     result = s.call_py({
         "jsonrpc": "2.0",
         "method": "broken_func",
-        "params": [5],
         "id": "1"
     })
     assert result['jsonrpc'] == "2.0"
@@ -270,6 +269,22 @@ def test_server_error():
     errdat = result['error']['data']
     assert errdat['details'] == 'whoops'
     assert errdat['method'] == 'broken_func'
+
+
+def test_params_must_be_missing():
+    """
+    When the method is present in the schema, but no params schema is provided
+    beneath it, then we enforce that params must be missing.
+    """
+    res = s.call_py({
+        "jsonrpc": "2.0",
+        "id": 0,
+        "method": "broken_func",
+        "params": []
+    })
+    assert res['error']['message'] == 'Invalid params'
+    assert res['error']['code'] == -32602
+    assert res['error']['data']['details'] == 'Parameters not allowed'
 
 
 def test_invalid_id():
@@ -345,7 +360,7 @@ def test_batch():
     results = s.call_py([
         {"jsonrpc": "2.0", "method": "square", "params": [4], "id": "1"},
         {"jsonrpc": "2.0", "method": "subtract", "params": [12, 3], "id": "2"},
-        {"jsonrpc": "2.0", "method": "noop", "id": "3"},
+        {"jsonrpc": "2.0", "method": "noop", "params": [], "id": "3"},
     ])
     assert len(results) == 3
     for result in results:
@@ -431,7 +446,7 @@ def test_partially_valid_batch():
         {"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": "2"},
         {"foo": "boo"},
         {"jsonrpc": "2.0", "method": "foo.get", "params": {"name": "myself"}, "id": "5"},
-        {"jsonrpc": "2.0", "method": "broken_func", "params": [5], "id": "9"}
+        {"jsonrpc": "2.0", "method": "broken_func", "id": "9"}
     ])
     assert len(results) == 5
     for result in results:
@@ -597,6 +612,8 @@ def test_service_discovery_ok():
         info = yaml.safe_load(fd)
     assert res['jsonrpc'] == '2.0'
     assert res['id'] == 0
+    # Add builtins for assertion
+    service_schema['definitions']['methods']['rpc.discover'] = {}
     assert res['result']['schema'] == service_schema
     assert res['result']['service_info'] == info
 
@@ -637,7 +654,7 @@ def test_empty_schema():
     """Test initialization of service with no schema"""
     s = jsonrpcbase.JSONRPCService(info=_SERVICE_INFO_PATH)
     assert s.schema['$schema'] == "http://json-schema.org/draft-07/schema#"
-    assert s.schema['definitions'] == {"methods": {}}
+    assert s.schema['definitions'] == {"methods": {"rpc.discover": {}}}
 
 
 def test_override_discover_method():

@@ -70,6 +70,8 @@ def load_schema(schema: Union[str, dict]) -> dict:
     if 'rpc.discover' in schema['definitions']['methods']:
         msg = "The `rpc.discover` method is reserved and should not be used"
         raise exceptions.InvalidSchemaError(msg)
+    # Builtin method schemas
+    schema['definitions']['methods']['rpc.discover'] = {}
     return schema
 
 

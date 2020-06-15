@@ -190,7 +190,10 @@ class JSONRPCService(object):
         params = req_data.get('params')
         (params_schema, result_schema) = utils.get_method_schemas(self.schema, req_data['method'])
         # Validate the parameters with the json-schema, if present
-        if params_schema is None and params is not None:
+        if (req_data['method'] in self.schema['definitions']['methods']
+                and params_schema is None
+                and params is not None):
+            # If there is an entry for the method, but no params schema, then params must be absent
             err_data = {'details': "Parameters not allowed"}
             return self._err_response(-32602, req_data, err_data)
         elif params_schema is not None:

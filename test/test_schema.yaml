@@ -23,9 +23,8 @@ definitions:
         maxLength: 1
         items: {type: integer}
     noop:
-      params: {type: [array, object, "null"]}
-    broken_func:
-      params: {type: [array, object, "null"]}
+      params: {type: [array, object]}
+    broken_func: {}
     posv:
       # Positional array types test
       params: {"$ref": "#/definitions/test_array"}
