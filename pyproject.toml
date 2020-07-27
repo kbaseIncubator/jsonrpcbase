@@ -18,8 +18,9 @@ classifiers = [
 homepage = "https://github.com/kbaseIncubator/jsonrpcbase"
 
 [tool.poetry.dependencies]
-python = "^3.5"
+python = "^3.6"
 jsonschema = "^3.2.0"
+pytest-cov = "^2.9.0"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.8.1"
