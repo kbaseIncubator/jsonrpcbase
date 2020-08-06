@@ -9,9 +9,10 @@ Uses Google Style Python docstrings:
 import json
 import logging
 import jsonschema
-from typing import Callable, Optional, List, Union
+from typing import Callable, Optional, List, Union, Dict
 
 import jsonrpcbase.exceptions as exceptions
+import jsonrpcbase.utils as utils
 
 # Reference: https://www.jsonrpc.org/specification
 REQUEST_SCHEMA = {
@@ -61,20 +62,37 @@ class JSONRPCService(object):
     The JSONRPCService class is a JSON-RPC
     """
 
-    def __init__(self):
+    # JSON-Schema for the service
+    schema: Optional[dict]
+    # Flag for development mode (validate result schemas)
+    development: bool
+    # Mapping of method name to function handler
+    method_data: Dict[str, Dict[str, Callable]]
+
+    def __init__(self,
+                 schema_path: Optional[str] = None,
+                 development: bool = False):
         """
         Initialize a new JSONRPCService object.
+
+        Args:
+            schema_path: filepath to a JSON schema document (as YAML or JSON)
+                with definitions for the service
         """
+        if schema_path is not None:
+            # Load service schema
+            self.schema = utils.load_schema(schema_path)
         # A mapping of method name to python function and json-schema
         self.method_data = {}
+        self.development = development
 
-    def add(self, func: Callable, name: Optional[str] = None, schema: Optional[dict] = None):
+    def add(self, func: Callable, name: Optional[str] = None):
         """
         Adds a new method to the jsonrpc service. If name argument is not
         given, function's own name will be used.
 
         Example:
-            service.add(myfunc, name='my_function', schema=param_schema)
+            service.add(myfunc, name='my_function')
 
         Args:
             func: required python function handler to call for this method
@@ -84,7 +102,7 @@ class JSONRPCService(object):
         fname = name if name else func.__name__
         if fname in self.method_data:
             raise exceptions.DuplicateMethodName(fname)
-        self.method_data[fname] = {'method': func, 'schema': schema}
+        self.method_data[fname] = {'method': func}
 
     def call(self, jsondata: str, metadata=None) -> str:
         """
@@ -133,6 +151,14 @@ class JSONRPCService(object):
     def _call_single(self, req_data: dict, metadata) -> dict:
         """
         Make a single method call (used in call_py() and _call_batch())
+        Args:
+            req_data: JSON-RPC 2.0 parsed request parameter data
+            metadata: Any user-supplied additional data to be passed to the method handler
+        Returns:
+            JSON-RPC 2.0 result data.
+        Raises:
+            jsonschema.ValidationError
+            exceptions.InvalidServerErrorCode
         """
         # Validate the request body using a json-schema
         try:
@@ -149,10 +175,12 @@ class JSONRPCService(object):
             err_data = {'available_methods': meths}
             return self._err_response(-32601, req_data, err_data=err_data)
         method = self.method_data[req_data['method']]['method']
-        schema = self.method_data[req_data['method']]['schema']
+        schema_path = ['definitions', 'methods', req_data['method'], 'params']
+        schema = utils.get_path(self.schema, schema_path)
         params = req_data.get('params')
         # Validate the parameters with the json-schema, if present
         if schema is not None:
+            schema['definitions'] = self.schema['definitions']
             try:
                 jsonschema.validate(params, schema)
             except jsonschema.exceptions.ValidationError as err:
@@ -173,6 +201,14 @@ class JSONRPCService(object):
                 if code > -32000 or code < -32099:
                     raise exceptions.InvalidServerErrorCode
             return self._err_response(code, req_data, err_data)
+        # Validate the result in development mode, if a result schema was supplied
+        if self.development:
+            path = ['definitions', 'methods', req_data['method'], 'result']
+            result_schema = utils.get_path(self.schema, path)
+            if result_schema:
+                result_schema['definitions'] = self.schema['definitions']
+                # Raises jsonschema.ValidationError
+                jsonschema.validate(result, result_schema)
         _id = self._response_id(req_data)
         if type(_id) in (str, int):
             # Return the result in JSON-RPC 2.0 response format
